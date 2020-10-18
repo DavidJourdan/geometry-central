@@ -30,14 +30,23 @@ void ExtrinsicGeometryInterface::computeVertexPrincipalCurvatureDirections() {
 
   for (Vertex v : mesh.vertices()) {
     Vector2 principalDir{0.0, 0.0};
+    // for (Halfedge he : v.outgoingHalfedges()) {
+    //   double len = edgeLengths[he.edge()];
+    //   double alpha = edgeDihedralAngles[he.edge()];
+    //   Vector2 vec = halfedgeVectorsInVertex[he];
+    //   principalDir += -vec * vec / len * alpha / 4;
+    // }
+
+    double angleOfEdge = 0;
     for (Halfedge he : v.outgoingHalfedges()) {
       double len = edgeLengths[he.edge()];
       double alpha = edgeDihedralAngles[he.edge()];
-      Vector2 vec = halfedgeVectorsInVertex[he];
-      principalDir += -vec * vec / len * std::abs(alpha);
+      
+      principalDir += -Vector2::fromAngle(2 * angleOfEdge) * len * alpha / 2;
+      angleOfEdge += cornerScaledAngles[he.corner()];
     }
 
-    vertexPrincipalCurvatureDirections[v] = principalDir / 4.0;
+    vertexPrincipalCurvatureDirections[v] = principalDir;
   }
 }
 void ExtrinsicGeometryInterface::requireVertexPrincipalCurvatureDirections() {

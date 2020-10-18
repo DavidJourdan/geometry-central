@@ -216,8 +216,7 @@ FaceData<Vector2> computeSmoothestBoundaryAlignedFaceDirectionField(IntrinsicGeo
   return field;
 }
 
-/*
-VertexData<Vector2> computeCurvatureAlignedVertexDirectionField(ExtrinsicGeometryInterface& geometry, int nSym) {
+VertexData<Vector2> computeCurvatureAlignedVertexDirectionField(EmbeddedGeometryInterface& geometry, Eigen::VectorXd& angles) {
 
 
   SurfaceMesh& mesh = geometry.mesh;
@@ -238,16 +237,9 @@ VertexData<Vector2> computeCurvatureAlignedVertexDirectionField(ExtrinsicGeometr
   Eigen::VectorXcd solution;
 
   Vector<std::complex<double>> dirVec(N);
-  if (nSym == 2) {
-    for (Vertex v : mesh.vertices()) {
-      dirVec[geometry.vertexIndices[v]] = geometry.vertexPrincipalCurvatureDirections[v];
-    }
-  } else if (nSym == 4) {
-    for (Vertex v : mesh.vertices()) {
-      dirVec[geometry.vertexIndices[v]] = std::pow(std::complex<double>(geometry.vertexPrincipalCurvatureDirections[v]), 2);
-    }
-  } else {
-    throw std::logic_error("ERROR: It only makes sense to align with curvature when nSym = 2 or 4");
+  for (Vertex v : mesh.vertices()) {
+    int i = geometry.vertexIndices[v];
+    dirVec[i] = std::complex<double>{std::cos(angles(i)), std::sin(angles(i))};
   }
 
   // Normalize the alignment field
@@ -257,7 +249,7 @@ VertexData<Vector2> computeCurvatureAlignedVertexDirectionField(ExtrinsicGeometr
   double lambdaT = 0.0; // this is something of a magical constant, see
   // "Globally Optimal Direction Fields", eqn 16
 
-  Eigen::VectorXcd RHS = dirVec;
+  Eigen::VectorXcd RHS = massMatrix * dirVec;
   Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix - lambdaT * massMatrix;
   solution = solveSquare(LHS, RHS);
 

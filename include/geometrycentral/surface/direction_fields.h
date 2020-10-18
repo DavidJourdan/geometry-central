@@ -1,8 +1,8 @@
 #pragma once
 
-#include "geometrycentral/surface/intrinsic_geometry_interface.h"
-#include "geometrycentral/surface/extrinsic_geometry_interface.h"
 #include "geometrycentral/surface/embedded_geometry_interface.h"
+#include "geometrycentral/surface/extrinsic_geometry_interface.h"
+#include "geometrycentral/surface/intrinsic_geometry_interface.h"
 
 
 namespace geometrycentral {
@@ -24,7 +24,7 @@ FaceData<Vector2> computeSmoothestBoundaryAlignedFaceDirectionField(IntrinsicGeo
 
 // Same as above, but aligned to curvatures
 // TODO
-// VertexData<Vector2> computeCurvatureAlignedVertexDirectionField(ExtrinsicGeometryInterface& geometry, int nSym = 2);
+VertexData<Vector2> computeCurvatureAlignedVertexDirectionField(EmbeddedGeometryInterface& geometry, Eigen::VectorXd& angles);
 
 // Also curvature aligned, but using extrinsic Dirichlet strategy
 // TODO
