@@ -24,7 +24,7 @@ FaceData<Vector2> computeSmoothestBoundaryAlignedFaceDirectionField(IntrinsicGeo
 
 // Same as above, but aligned to curvatures
 // TODO
-VertexData<Vector2> computeCurvatureAlignedVertexDirectionField(EmbeddedGeometryInterface& geometry, Eigen::VectorXd& angles);
+VertexData<Vector2> computeCurvatureAlignedVertexDirectionField(EmbeddedGeometryInterface& geometry, Eigen::VectorXcd& dirs);
 
 // Also curvature aligned, but using extrinsic Dirichlet strategy
 // TODO

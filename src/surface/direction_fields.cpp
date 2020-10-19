@@ -124,19 +124,10 @@ VertexData<Vector2> computeSmoothestBoundaryAlignedVertexDirectionField(Intrinsi
   }
   Vector<std::complex<double>> b = boundaryValues.toVector();
 
-  // Block decompose problem
-
-
-  // Compute the actual solution
-  std::cout << "Solving linear problem..." << std::endl;
-
-  // Store the solution here
-  Eigen::VectorXcd solution;
-
   std::cout << "Solving smoothest field dirichlet problem..." << std::endl;
   Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix;
   Eigen::VectorXcd RHS = massMatrix * b;
-  solution = solveSquare(LHS, RHS);
+  Eigen::VectorXcd solution = solveSquare(LHS, RHS);
 
   // Copy the result to a VertexData vector for both the boundary and interior
   VertexData<Vector2> toReturn(mesh);
@@ -216,7 +207,7 @@ FaceData<Vector2> computeSmoothestBoundaryAlignedFaceDirectionField(IntrinsicGeo
   return field;
 }
 
-VertexData<Vector2> computeCurvatureAlignedVertexDirectionField(EmbeddedGeometryInterface& geometry, Eigen::VectorXd& angles) {
+VertexData<Vector2> computeCurvatureAlignedVertexDirectionField(EmbeddedGeometryInterface& geometry, Eigen::VectorXcd& dirs) {
 
 
   SurfaceMesh& mesh = geometry.mesh;
@@ -233,25 +224,23 @@ VertexData<Vector2> computeCurvatureAlignedVertexDirectionField(EmbeddedGeometry
   // Energy matrix
   SparseMatrix<std::complex<double>> energyMatrix = geometry.vertexConnectionLaplacian;
 
-  // Store the solution here
-  Eigen::VectorXcd solution;
+  // Shift to avoid singularity
+  Eigen::SparseMatrix<std::complex<double>> eye(energyMatrix.rows(), energyMatrix.cols());
+  eye.setIdentity();
+  energyMatrix += 1e-4 * eye;
 
-  Vector<std::complex<double>> dirVec(N);
-  for (Vertex v : mesh.vertices()) {
-    int i = geometry.vertexIndices[v];
-    dirVec[i] = std::complex<double>{std::cos(angles(i)), std::sin(angles(i))};
-  }
+  Vector<std::complex<double>> dirVec = dirs;
 
   // Normalize the alignment field
   double scale = std::sqrt(std::abs((dirVec.adjoint() * massMatrix * dirVec)[0]));
   dirVec /= scale;
 
-  double lambdaT = 0.0; // this is something of a magical constant, see
+  double lambdaT = 0; // this is something of a magical constant, see
   // "Globally Optimal Direction Fields", eqn 16
 
   Eigen::VectorXcd RHS = massMatrix * dirVec;
   Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix - lambdaT * massMatrix;
-  solution = solveSquare(LHS, RHS);
+  Eigen::VectorXcd solution = solveSquare(LHS, RHS);
 
 
   // Copy the result to a VertexData vector
@@ -263,7 +252,7 @@ VertexData<Vector2> computeCurvatureAlignedVertexDirectionField(EmbeddedGeometry
 
   return toReturn;
 }
-
+/*
 FaceData<Vector2> computeCurvatureAlignedFaceDirectionField(EmbeddedGeometryInterface& geometry, int nSym) {
 
   if (nSym != 2 && nSym != 4) {
@@ -303,7 +292,7 @@ FaceData<Vector2> computeCurvatureAlignedFaceDirectionField(EmbeddedGeometryInte
       double weight = geometry.edgeLengths[he.edge()];
       weightSum += weight;
       double angleCoord = geometry.cornerAngles[he.corner()];
-      std::complex<double> coord = std::exp(std::complex<double>{0, angleCoord * nSym});
+      std::complex<double> coord = std::polar(1, angleCoord * nSym);
       sum += coord * weight * dihedralAngle;
     }
 
