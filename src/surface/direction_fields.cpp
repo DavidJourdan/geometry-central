@@ -359,6 +359,7 @@ FaceData<Vector2> computeCurvatureAlignedFaceDirectionField(EmbeddedGeometryInte
   geometry.requireFaceIndices();
   geometry.requireFaceGalerkinMassMatrix();
   geometry.requireFacePrincipalCurvatureDirections();
+  geometry.requireFaceMeanCurvatures();
 
   // Mass matrix
   SparseMatrix<std::complex<double>> massMatrix = geometry.faceGalerkinMassMatrix.cast<std::complex<double>>();
@@ -369,7 +370,10 @@ FaceData<Vector2> computeCurvatureAlignedFaceDirectionField(EmbeddedGeometryInte
   Eigen::VectorXcd dirVec(N);
   if (nSym == 2) {
     for (Face f : mesh.faces()) {
-      dirVec[geometry.faceIndices[f]] = geometry.facePrincipalCurvatureDirections[f];
+      if (geometry.faceMeanCurvatures[f] > 0)
+        dirVec[geometry.faceIndices[f]] = geometry.facePrincipalCurvatureDirections[f];
+      else
+        dirVec[geometry.faceIndices[f]] = -geometry.facePrincipalCurvatureDirections[f];
     }
   } else if (nSym == 4) {
     for (Face f : mesh.faces()) {
