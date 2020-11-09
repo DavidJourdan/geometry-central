@@ -35,6 +35,11 @@ public:
   void requireFacePrincipalCurvatureDirections();
   void unrequireFacePrincipalCurvatureDirections();
 
+  // Face mean curvature
+  FaceData<double> faceMeanCurvatures;
+  void requireFaceMeanCurvatures();
+  void unrequireFaceMeanCurvatures();
+
 protected:
   // Edge dihedral angle
   DependentQuantityD<EdgeData<double>> edgeDihedralAnglesQ;
@@ -47,6 +52,10 @@ protected:
   // Face principal curvature
   DependentQuantityD<FaceData<Vector2>> facePrincipalCurvatureDirectionsQ;
   virtual void computeFacePrincipalCurvatureDirections();
+
+  // Face mean curvature
+  DependentQuantityD<FaceData<double>> faceMeanCurvaturesQ;
+  virtual void computeFaceMeanCurvatures();
 };
 
 } // namespace surface
