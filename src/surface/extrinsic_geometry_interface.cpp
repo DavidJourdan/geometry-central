@@ -9,10 +9,11 @@ namespace surface {
 ExtrinsicGeometryInterface::ExtrinsicGeometryInterface(SurfaceMesh& mesh_) : 
   IntrinsicGeometryInterface(mesh_),
 
-  edgeDihedralAnglesQ                  (&edgeDihedralAngles,                   std::bind(&ExtrinsicGeometryInterface::computeEdgeDihedralAngles, this),                 quantities),
-  vertexPrincipalCurvatureDirectionsQ  (&vertexPrincipalCurvatureDirections,   std::bind(&ExtrinsicGeometryInterface::computeVertexPrincipalCurvatureDirections, this), quantities),
-  facePrincipalCurvatureDirectionsQ    (&facePrincipalCurvatureDirections,     std::bind(&ExtrinsicGeometryInterface::computeFacePrincipalCurvatureDirections, this),   quantities),
-  faceMeanCurvaturesQ                  (&faceMeanCurvatures,                   std::bind(&ExtrinsicGeometryInterface::computeFaceMeanCurvatures, this),   quantities)
+  edgeDihedralAnglesQ                  (&edgeDihedralAngles,                 std::bind(&ExtrinsicGeometryInterface::computeEdgeDihedralAngles, this),                 quantities),
+  vertexPrincipalCurvatureDirectionsQ  (&vertexPrincipalCurvatureDirections, std::bind(&ExtrinsicGeometryInterface::computeVertexPrincipalCurvatureDirections, this), quantities),
+  facePrincipalCurvatureDirectionsQ    (&facePrincipalCurvatureDirections,   std::bind(&ExtrinsicGeometryInterface::computeFacePrincipalCurvatureDirections, this),   quantities),
+  faceMeanCurvaturesQ                  (&faceMeanCurvatures,                 std::bind(&ExtrinsicGeometryInterface::computeFaceMeanCurvatures, this),   quantities),
+  vertexMeanCurvaturesQ                (&vertexMeanCurvatures,               std::bind(&ExtrinsicGeometryInterface::computeVertexMeanCurvatures, this),   quantities)
   
   {
   }
@@ -95,6 +96,25 @@ void ExtrinsicGeometryInterface::computeFaceMeanCurvatures() {
 
 void ExtrinsicGeometryInterface::requireFaceMeanCurvatures() { faceMeanCurvaturesQ.require(); }
 void ExtrinsicGeometryInterface::unrequireFaceMeanCurvatures() { faceMeanCurvaturesQ.unrequire(); }
+
+void ExtrinsicGeometryInterface::computeVertexMeanCurvatures() {
+  edgeLengthsQ.ensureHave();
+  edgeDihedralAnglesQ.ensureHave();
+
+  vertexMeanCurvatures = VertexData<double>(mesh);
+
+  for (Vertex v : mesh.vertices()) {
+    double sum = 0;
+    for (Edge e : v.adjacentEdges()) {
+      sum += edgeLengths[e] * edgeDihedralAngles[e];
+    }
+
+    vertexMeanCurvatures[v] = sum / 4;
+  }
+}
+
+void ExtrinsicGeometryInterface::requireVertexMeanCurvatures() { vertexMeanCurvaturesQ.require(); }
+void ExtrinsicGeometryInterface::unrequireVertexMeanCurvatures() { vertexMeanCurvaturesQ.unrequire(); }
 
 } // namespace surface
 } // namespace geometrycentral

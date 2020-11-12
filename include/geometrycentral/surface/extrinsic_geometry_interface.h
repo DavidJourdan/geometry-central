@@ -35,6 +35,11 @@ public:
   void requireFacePrincipalCurvatureDirections();
   void unrequireFacePrincipalCurvatureDirections();
 
+  // Vertex mean curvature
+  VertexData<double> vertexMeanCurvatures;
+  void requireVertexMeanCurvatures();
+  void unrequireVertexMeanCurvatures();
+
   // Face mean curvature
   FaceData<double> faceMeanCurvatures;
   void requireFaceMeanCurvatures();
@@ -52,6 +57,10 @@ protected:
   // Face principal curvature
   DependentQuantityD<FaceData<Vector2>> facePrincipalCurvatureDirectionsQ;
   virtual void computeFacePrincipalCurvatureDirections();
+
+  // Vertex mean curvature
+  DependentQuantityD<VertexData<double>> vertexMeanCurvaturesQ;
+  virtual void computeVertexMeanCurvatures();
 
   // Face mean curvature
   DependentQuantityD<FaceData<double>> faceMeanCurvaturesQ;
