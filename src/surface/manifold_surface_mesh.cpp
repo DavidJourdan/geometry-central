@@ -1382,7 +1382,7 @@ bool ManifoldSurfaceMesh::removeFaceAlongBoundary(Face f) {
 
 Face ManifoldSurfaceMesh::removeVertex(Vertex v) {
   if (v.isBoundary()) {
-    throw std::runtime_error("not implemented");
+    throw std::runtime_error("removeVertex() not implemented for boundary vertices");
   }
 
   // Halfedges/edges/faces that will be removed
@@ -1398,6 +1398,11 @@ Face ManifoldSurfaceMesh::removeVertex(Vertex v) {
       return Face();
     }
     ringHalfedges.push_back(oppHe);
+
+    // Must be triangular to be removable
+    if (oppHe.next().next() != he) {
+      throw std::runtime_error("removeVertex() requires that all incident faces are triangular");
+    }
   }
 
   Face keepFace = toRemove[0].face();
@@ -1417,10 +1422,12 @@ Face ManifoldSurfaceMesh::removeVertex(Vertex v) {
 
   // Actually delete all of the elements
   for (Halfedge he : toRemove) {
-    if (he.face() != keepFace) {
-      deleteElement(he.face());
-    }
+    // delete the edge before the face since deleteEdgeBundle() needs to check manifold-ness (see note there)
+    Face f = he.face();
     deleteEdgeBundle(he.edge());
+    if (f != keepFace) {
+      deleteElement(f);
+    }
   }
   deleteElement(v);
 
@@ -1606,7 +1613,7 @@ std::vector<Face> ManifoldSurfaceMesh::triangulate(Face f) {
   Halfedge connectHe = f.halfedge();
   for (size_t i = 2; i + 1 < neighHalfedges.size(); i++) {
     connectHe = connectVertices(connectHe, neighHalfedges[i]);
-    allFaces.emplace_back(neighHalfedges[i].face());
+    allFaces.emplace_back(connectHe.twin().face());
   }
 
   modificationTick++;
