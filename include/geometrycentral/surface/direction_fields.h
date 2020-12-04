@@ -1,8 +1,8 @@
 #pragma once
 
-#include "geometrycentral/surface/intrinsic_geometry_interface.h"
-#include "geometrycentral/surface/extrinsic_geometry_interface.h"
 #include "geometrycentral/surface/embedded_geometry_interface.h"
+#include "geometrycentral/surface/extrinsic_geometry_interface.h"
+#include "geometrycentral/surface/intrinsic_geometry_interface.h"
 
 
 namespace geometrycentral {
@@ -16,7 +16,8 @@ namespace surface {
 VertexData<Vector2> computeSmoothestVertexDirectionField(IntrinsicGeometryInterface& geometry, int nSym = 1);
 
 // Like above, but with Dirichlet boundary conditions to align to hte boundary
-VertexData<Vector2> computeSmoothestBoundaryAlignedVertexDirectionField(IntrinsicGeometryInterface& geometry, int nSym = 1);
+VertexData<Vector2> computeSmoothestBoundaryAlignedVertexDirectionField(IntrinsicGeometryInterface& geometry,
+                                                                        int nSym = 1);
 
 FaceData<Vector2> computeSmoothestFaceDirectionField(IntrinsicGeometryInterface& geometry, int nSym = 1);
 
@@ -28,6 +29,9 @@ VertexData<Vector2> computeCurvatureAlignedVertexDirectionField(ExtrinsicGeometr
 // Also curvature aligned, but using extrinsic Dirichlet strategy
 FaceData<Vector2> computeCurvatureAlignedFaceDirectionField(EmbeddedGeometryInterface& geometry, int nSym = 2);
 
+VertexData<Vector2> computeDirectionAlignedVertexDirectionField(IntrinsicGeometryInterface& geometry,
+                                                                VertexData<Vector2>& vector_field, int nSym = 2,
+                                                                double lambda = 0);
 
 // Find singularities in direction fields
 FaceData<int> computeFaceIndex(IntrinsicGeometryInterface& geometry, const VertexData<Vector2>& directionField,

@@ -1,9 +1,9 @@
 #pragma once
 
+#include "geometrycentral/numerical/linear_algebra_types.h"
 #include "geometrycentral/surface/halfedge_element_types.h"
 #include "geometrycentral/utilities/mesh_data.h"
 #include "geometrycentral/utilities/utilities.h"
-#include "geometrycentral/numerical/linear_algebra_types.h"
 
 #include <list>
 #include <memory>
@@ -179,7 +179,7 @@ public:
   std::list<std::function<void(size_t)>> halfedgeExpandCallbackList;
 
   // Compression callbacks
-  // Argument is a permutation to a apply, such that d_new[i] = d_old[p[i]]. THe length of the permutation is hte size
+  // Argument is a permutation to a apply, such that d_new[i] = d_old[p[i]]. THe length of the permutation is the size
   // of the new index space. Any elements with p[i] == INVALID_IND are unused in the new index space.
   std::list<std::function<void(const std::vector<size_t>&)>> vertexPermuteCallbackList;
   std::list<std::function<void(const std::vector<size_t>&)>> facePermuteCallbackList;
