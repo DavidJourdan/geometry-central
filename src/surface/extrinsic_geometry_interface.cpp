@@ -14,6 +14,7 @@ ExtrinsicGeometryInterface::ExtrinsicGeometryInterface(SurfaceMesh& mesh_) :
   vertexMinPrincipalCurvaturesQ        (&vertexMinPrincipalCurvatures,         std::bind(&ExtrinsicGeometryInterface::computeVertexMinPrincipalCurvatures, this),       quantities),
   vertexMaxPrincipalCurvaturesQ        (&vertexMaxPrincipalCurvatures,         std::bind(&ExtrinsicGeometryInterface::computeVertexMaxPrincipalCurvatures, this),       quantities),
   vertexPrincipalCurvatureDirectionsQ  (&vertexPrincipalCurvatureDirections,   std::bind(&ExtrinsicGeometryInterface::computeVertexPrincipalCurvatureDirections, this), quantities),
+  faceMeanCurvaturesQ                  (&faceMeanCurvatures,                   std::bind(&ExtrinsicGeometryInterface::computeFaceMeanCurvatures, this),   quantities),
   facePrincipalCurvatureDirectionsQ    (&facePrincipalCurvatureDirections,     std::bind(&ExtrinsicGeometryInterface::computeFacePrincipalCurvatureDirections, this),   quantities)
   
   {
@@ -58,6 +59,24 @@ void ExtrinsicGeometryInterface::unrequireVertexMeanCurvatures() {
   vertexMeanCurvaturesQ.unrequire();
 }
 
+void ExtrinsicGeometryInterface::computeFaceMeanCurvatures() {
+  edgeLengthsQ.ensureHave();
+  edgeDihedralAnglesQ.ensureHave();
+
+  faceMeanCurvatures = FaceData<double>(mesh);
+
+  for (Face f : mesh.faces()) {
+    double sum = 0;
+    for (Edge e : f.adjacentEdges()) {
+      sum += edgeLengths[e] * edgeDihedralAngles[e];
+    }
+
+    faceMeanCurvatures[f] = sum / 4;
+  }
+}
+
+void ExtrinsicGeometryInterface::requireFaceMeanCurvatures() { faceMeanCurvaturesQ.require(); }
+void ExtrinsicGeometryInterface::unrequireFaceMeanCurvatures() { faceMeanCurvaturesQ.unrequire(); }
 
 void ExtrinsicGeometryInterface::computeVertexMinPrincipalCurvatures() {
    computePrincipalCurvatures( 1, vertexMinPrincipalCurvatures );
