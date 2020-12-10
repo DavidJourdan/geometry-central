@@ -27,6 +27,17 @@ VertexData<Vector2> computeCurvatureAlignedVertexDirectionField(ExtrinsicGeometr
 
 FaceData<Vector2> computeCurvatureAlignedFaceDirectionField(EmbeddedGeometryInterface& geometry, int nSym = 2);
 
+VertexData<Vector2> computeDirectionAlignedVertexDirectionField(
+    EmbeddedGeometryInterface& geometry,
+    VertexData<Vector2> directions,
+    int nSym = 2,
+    double lambda = 0);
+
+FaceData<Vector2> computeDirectionAlignedFaceDirectionField(
+    EmbeddedGeometryInterface& geometry,
+    FaceData<Vector2> directions,
+    int nSym = 2,
+    double lambda = 0);
 
 // Find singularities in direction fields
 FaceData<int> computeFaceIndex(IntrinsicGeometryInterface& geometry, const VertexData<Vector2>& directionField,

@@ -403,6 +403,97 @@ FaceData<Vector2> computeCurvatureAlignedFaceDirectionField(EmbeddedGeometryInte
   return field;
 }
 
+VertexData<Vector2> computeDirectionAlignedVertexDirectionField(
+    EmbeddedGeometryInterface& geometry,
+    VertexData<Vector2> directions,
+    int nSym,
+    double lambda) {
+
+  SurfaceMesh& mesh = geometry.mesh;
+  size_t N = mesh.nVertices();
+
+  geometry.requireVertexIndices();
+  geometry.requireVertexGalerkinMassMatrix();
+  geometry.requireVertexPrincipalCurvatureDirections();
+
+  // Mass matrix
+  SparseMatrix<std::complex<double>> massMatrix = geometry.vertexGalerkinMassMatrix.cast<std::complex<double>>();
+
+  // Energy matrix
+  SparseMatrix<std::complex<double>> energyMatrix = computeVertexConnectionLaplacian(geometry, nSym);
+
+  Vector<std::complex<double>> dirVec(N);
+  if (nSym != 2 && nSym != 4) {
+    throw std::logic_error("ERROR: It only makes sense to align with curvature when nSym = 2 or 4");
+  }
+  for (Vertex v : mesh.vertices()) {
+    dirVec[geometry.vertexIndices[v]] = directions[v];
+  }
+
+  // Normalize the alignment field
+  double scale = std::sqrt(std::abs((dirVec.adjoint() * massMatrix * dirVec)[0]));
+  dirVec /= scale;
+
+  // lambda is something of a magical constant, see "Globally Optimal Direction Fields", eqn 16
+  Eigen::VectorXcd RHS = massMatrix * dirVec;
+  Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix - lambda * massMatrix;
+  Eigen::VectorXcd solution = solveSquare(LHS, RHS);
+
+  // Copy the result to a VertexData vector
+  VertexData<Vector2> toReturn(mesh);
+  for (Vertex v : mesh.vertices()) {
+    toReturn[v] = Vector2::fromComplex(solution(geometry.vertexIndices[v]));
+    toReturn[v] = unit(toReturn[v]);
+  }
+
+  return toReturn;
+}
+
+FaceData<Vector2> computeDirectionAlignedFaceDirectionField(
+    EmbeddedGeometryInterface& geometry,
+    FaceData<Vector2> directions,
+    int nSym,
+    double lambda) {
+
+  SurfaceMesh& mesh = geometry.mesh;
+  const unsigned int N = mesh.nFaces();
+
+  geometry.requireFaceIndices();
+  geometry.requireFaceGalerkinMassMatrix();
+  geometry.requireFacePrincipalCurvatureDirections();
+
+  if (nSym != 2 && nSym != 4) {
+    throw std::logic_error("ERROR: It only makes sense to align with curvature when nSym = 2 or 4");
+  }
+
+  // Mass matrix
+  SparseMatrix<std::complex<double>> massMatrix = geometry.faceGalerkinMassMatrix.cast<std::complex<double>>();
+
+  // Energy matrix
+  SparseMatrix<std::complex<double>> energyMatrix = computeFaceConnectionLaplacian(geometry, nSym);
+  Vector<std::complex<double>> dirVec(N);
+  for (Face f : mesh.faces()) {
+    dirVec[geometry.faceIndices[f]] = directions[f];
+  }
+  // Normalize the alignment field
+  double scale = std::sqrt(std::abs((dirVec.adjoint() * massMatrix * dirVec)[0]));
+  dirVec /= scale;
+
+  // lambda is something of a magical constant, see "Globally Optimal Direction Fields", eqn 16
+  Eigen::VectorXcd RHS = massMatrix * dirVec;
+  Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix - lambda * massMatrix;
+  Eigen::VectorXcd solution = solveSquare(LHS, RHS);
+
+  // Copy the result to a FaceData object
+  FaceData<Vector2> field(mesh);
+  for (Face f : mesh.faces()) {
+    field[f] = Vector2::fromComplex(solution[geometry.faceIndices[f]]);
+    field[f] = unit(field[f]);
+  }
+
+  return field;
+}
+
 
 FaceData<int> computeFaceIndex(IntrinsicGeometryInterface& geometry, const VertexData<Vector2>& directionField,
                                int nSym) {
