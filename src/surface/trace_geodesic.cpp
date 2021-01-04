@@ -128,11 +128,11 @@ struct TraceSubResult {
 // triangle and pointing in the right direction)
 //
 // This function is tightly coupled with the routines which call it. They prepare the values startPoint, vecBary, and
-// vecCartesian, ensuring that those values satisify basic properties (essentially that the trace points in a vallid
+// vecCartesian, ensuring that those values satisify basic properties (essentially that the trace points in a valid
 // direction).
 //
 // Note that this expects to be given the trace vector in both barycentric _and_ cartesian coordinates. These are two
-// different representations of the same data! This is useful the barycentric representation is good for relilably
+// different representations of the same data! This is useful the barycentric representation is good for reliably
 // performing tracing, while the cartesian representation is good for transforming the trace vector between triangles.
 inline TraceSubResult traceInFaceBarycentric(IntrinsicGeometryInterface& geom, Face face, Vector3 startPoint,
                                              Vector3 vecBary, Vector2 vecCartesianDir, double vecCartesianLen,

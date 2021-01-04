@@ -813,7 +813,7 @@ Face SurfaceMesh::duplicateFace(Face f) {
   return newFace;
 }
 
-bool SurfaceMesh::flip(Edge eFlip) {
+bool SurfaceMesh::flip(Edge eFlip, bool preventSelfEdges) {
   if (eFlip.isBoundary()) return false;
 
   // Get halfedges of first face
@@ -844,6 +844,14 @@ bool SurfaceMesh::flip(Edge eFlip) {
   Vertex vb = hb1.vertex();
   Vertex vc = ha3.vertex();
   Vertex vd = hb3.vertex();
+
+  if (preventSelfEdges) {
+    // If enabled, make sure it is not a duplicate
+    for (Vertex v : vc.adjacentVertices()) {
+      if(v == vd) return false;
+    }
+  }
+  
   Face fa = ha1.face();
   Face fb = hb1.face();
 
@@ -1358,6 +1366,7 @@ Vertex SurfaceMesh::getNewVertex() {
   nVerticesCount++;
 
   modificationTick++;
+  isCompressedFlag = false;
   return Vertex(this, nVerticesFillCount - 1);
 }
 
@@ -1404,6 +1413,7 @@ Halfedge SurfaceMesh::getNewHalfedge(bool isInterior) {
   }
 
   modificationTick++;
+  isCompressedFlag = false;
   return Halfedge(this, nHalfedgesFillCount - 1);
 }
 
@@ -1437,6 +1447,7 @@ Edge SurfaceMesh::getNewEdge() {
   nEdgesCount++;
 
   modificationTick++;
+  isCompressedFlag = false;
   return Edge(this, nEdgesFillCount - 1);
 }
 
@@ -1516,6 +1527,7 @@ Halfedge SurfaceMesh::getNewEdgeTriple(bool onBoundary) {
   nEdgesCount++;
 
   modificationTick++;
+  isCompressedFlag = false;
   return Halfedge(this, nHalfedgesFillCount - 2);
 }
 
@@ -1535,6 +1547,7 @@ Face SurfaceMesh::getNewFace() {
   nFacesFillCount++;
 
   modificationTick++;
+  isCompressedFlag = false;
   return Face(this, nFacesFillCount - 1);
 }
 
@@ -1553,6 +1566,7 @@ BoundaryLoop SurfaceMesh::getNewBoundaryLoop() {
   nBoundaryLoopsFillCount++;
 
   modificationTick++;
+  isCompressedFlag = false;
   return BoundaryLoop(this, nFacesCapacityCount - nBoundaryLoopsFillCount);
 }
 
