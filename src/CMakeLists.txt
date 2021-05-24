@@ -40,6 +40,7 @@ SET(SRCS
   surface/intrinsic_mollification.cpp
   surface/tufted_laplacian.cpp
   surface/flip_geodesics.cpp
+  surface/stripe_patterns.cpp
   #surface/detect_symmetry.cpp
   #surface/mesh_ray_tracer.cpp
 
@@ -99,6 +100,7 @@ SET(HEADERS
   ${INCLUDE_ROOT}/surface/surface_mesh.h
   ${INCLUDE_ROOT}/surface/surface_mesh.ipp
   ${INCLUDE_ROOT}/surface/surface_point.h
+  ${INCLUDE_ROOT}/surface/stripe_patterns.h
   ${INCLUDE_ROOT}/surface/surface_point.ipp
   ${INCLUDE_ROOT}/surface/surgery.h
   ${INCLUDE_ROOT}/surface/trace_geodesic.h
