@@ -52,12 +52,8 @@ void ExtrinsicGeometryInterface::computeVertexMeanCurvatures() {
     vertexMeanCurvatures[v] = meanCurvature / 2.;
   }
 }
-void ExtrinsicGeometryInterface::requireVertexMeanCurvatures() {
-  vertexMeanCurvaturesQ.require();
-}
-void ExtrinsicGeometryInterface::unrequireVertexMeanCurvatures() {
-  vertexMeanCurvaturesQ.unrequire();
-}
+void ExtrinsicGeometryInterface::requireVertexMeanCurvatures() { vertexMeanCurvaturesQ.require(); }
+void ExtrinsicGeometryInterface::unrequireVertexMeanCurvatures() { vertexMeanCurvaturesQ.unrequire(); }
 
 void ExtrinsicGeometryInterface::computeFaceMeanCurvatures() {
   edgeLengthsQ.ensureHave();
@@ -66,12 +62,12 @@ void ExtrinsicGeometryInterface::computeFaceMeanCurvatures() {
   faceMeanCurvatures = FaceData<double>(mesh);
 
   for (Face f : mesh.faces()) {
-    double sum = 0;
+    double meanCurvature = 0;
     for (Edge e : f.adjacentEdges()) {
-      sum += edgeLengths[e] * edgeDihedralAngles[e];
+      meanCurvature += edgeLengths[e] * edgeDihedralAngles[e];
     }
 
-    faceMeanCurvatures[f] = sum / 4;
+    faceMeanCurvatures[f] = meanCurvature / 2;
   }
 }
 
@@ -79,52 +75,43 @@ void ExtrinsicGeometryInterface::requireFaceMeanCurvatures() { faceMeanCurvature
 void ExtrinsicGeometryInterface::unrequireFaceMeanCurvatures() { faceMeanCurvaturesQ.unrequire(); }
 
 void ExtrinsicGeometryInterface::computeVertexMinPrincipalCurvatures() {
-   computePrincipalCurvatures( 1, vertexMinPrincipalCurvatures );
+  computePrincipalCurvatures(1, vertexMinPrincipalCurvatures);
 }
-void ExtrinsicGeometryInterface::requireVertexMinPrincipalCurvatures() {
-  vertexMinPrincipalCurvaturesQ.require();
-}
-void ExtrinsicGeometryInterface::unrequireVertexMinPrincipalCurvatures() {
-  vertexMinPrincipalCurvaturesQ.unrequire();
-}
+void ExtrinsicGeometryInterface::requireVertexMinPrincipalCurvatures() { vertexMinPrincipalCurvaturesQ.require(); }
+void ExtrinsicGeometryInterface::unrequireVertexMinPrincipalCurvatures() { vertexMinPrincipalCurvaturesQ.unrequire(); }
 
 void ExtrinsicGeometryInterface::computeVertexMaxPrincipalCurvatures() {
-   computePrincipalCurvatures( 2, vertexMaxPrincipalCurvatures );
+  computePrincipalCurvatures(2, vertexMaxPrincipalCurvatures);
 }
-void ExtrinsicGeometryInterface::requireVertexMaxPrincipalCurvatures() {
-  vertexMaxPrincipalCurvaturesQ.require();
-}
-void ExtrinsicGeometryInterface::unrequireVertexMaxPrincipalCurvatures() {
-  vertexMaxPrincipalCurvaturesQ.unrequire();
-}
+void ExtrinsicGeometryInterface::requireVertexMaxPrincipalCurvatures() { vertexMaxPrincipalCurvaturesQ.require(); }
+void ExtrinsicGeometryInterface::unrequireVertexMaxPrincipalCurvatures() { vertexMaxPrincipalCurvaturesQ.unrequire(); }
 
-void ExtrinsicGeometryInterface::computePrincipalCurvatures( int whichCurvature, VertexData<double>& kappa )
-{
-   vertexGaussianCurvaturesQ.ensureHave();
-   vertexMeanCurvaturesQ.ensureHave();
-   vertexDualAreasQ.ensureHave();
+void ExtrinsicGeometryInterface::computePrincipalCurvatures(int whichCurvature, VertexData<double>& kappa) {
+  vertexGaussianCurvaturesQ.ensureHave();
+  vertexMeanCurvaturesQ.ensureHave();
+  vertexDualAreasQ.ensureHave();
 
-   kappa = VertexData<double>(mesh);
+  kappa = VertexData<double>(mesh);
 
-   for (Vertex v : mesh.vertices()) {
-      // Vertex mean and Gaussian curvatures are integrated
-      // values; need to divide them by dual areas to get
-      // pointwise quantities.
-      double A = vertexDualAreas[v];
-      double H = vertexMeanCurvatures[v] / A;
-      double K = vertexGaussianCurvatures[v] / A;
+  for (Vertex v : mesh.vertices()) {
+    // Vertex mean and Gaussian curvatures are integrated
+    // values; need to divide them by dual areas to get
+    // pointwise quantities.
+    double A = vertexDualAreas[v];
+    double H = vertexMeanCurvatures[v] / A;
+    double K = vertexGaussianCurvatures[v] / A;
 
-      // The two principal curvatures are given by
-      //    H +/- sqrt( H^2 - K )
-      double c = std::sqrt(std::max(0.,H*H - K));
-      double k1 = H - c;
-      double k2 = H + c;
+    // The two principal curvatures are given by
+    //    H +/- sqrt( H^2 - K )
+    double c = std::sqrt(std::max(0., H * H - K));
+    double k1 = H - c;
+    double k2 = H + c;
 
-      if( whichCurvature == 1 )
-         kappa[v] = std::min( k1, k2 );
-      else
-         kappa[v] = std::max( k1, k2 );
-   }
+    if (whichCurvature == 1)
+      kappa[v] = std::min(k1, k2);
+    else
+      kappa[v] = std::max(k1, k2);
+  }
 }
 
 
