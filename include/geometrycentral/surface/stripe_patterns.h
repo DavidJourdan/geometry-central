@@ -1,7 +1,8 @@
 #pragma once
 
+#include "geometrycentral/surface/embedded_geometry_interface.h"
 #include "geometrycentral/surface/intrinsic_geometry_interface.h"
-
+#include <vector>
 
 namespace geometrycentral {
 namespace surface {
@@ -15,6 +16,22 @@ namespace surface {
 std::tuple<CornerData<double>, FaceData<int>, FaceData<int>>
 computeStripePattern(IntrinsicGeometryInterface& geometry, const VertexData<double>& frequencies,
                      const VertexData<Vector2>& directionField);
+
+struct Isoline {
+  std::vector<std::pair<Halfedge, double>> barycenters;
+  bool open;
+};
+
+// extracts isolines as a list of barycentric coordinates and their corresponding halfedges
+std::vector<Isoline> extractIsolinesFromStripePattern(IntrinsicGeometryInterface& geometry,
+                                                      const CornerData<double>& stripeValues,
+                                                      const FaceData<int>& zeroIndices,
+                                                      const FaceData<int>& fieldIndices);
+
+// extracts isolines as a list of vertex positions, requires the geometry to have an embedding
+std::tuple<std::vector<Vector3>, std::vector<std::array<int, 2>>>
+extractPolylinesFromStripePattern(EmbeddedGeometryInterface& geometry, const CornerData<double>& values,
+                                  const FaceData<int>& stripesIndices, const FaceData<int>& fieldIndices);
 
 } // namespace surface
 } // namespace geometrycentral
