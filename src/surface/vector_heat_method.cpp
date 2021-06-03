@@ -86,7 +86,6 @@ VertexData<double> VectorHeatMethodSolver::extendScalar(const std::vector<std::t
   }
 
   ensureHaveScalarHeatSolver();
-
   geom.requireVertexIndices();
 
   // === Build the RHS
@@ -139,6 +138,19 @@ VertexData<double> VectorHeatMethodSolver::extendScalar(const std::vector<std::t
   return result;
 }
 
+VertexData<Vector2> VectorHeatMethodSolver::transportTangentVector(Vertex sourceVert, Vector2 sourceVec) {
+  std::vector<std::tuple<Vertex, Vector2>> sources{std::tuple<Vertex, Vector2>{sourceVert, sourceVec}};
+  return transportTangentVectors(sources);
+}
+
+VertexData<Vector2>
+VectorHeatMethodSolver::transportTangentVectors(const std::vector<std::tuple<Vertex, Vector2>>& sources) {
+  std::vector<std::tuple<SurfacePoint, Vector2>> sourcesSurf;
+  for (const auto& tup : sources) {
+    sourcesSurf.emplace_back(SurfacePoint(std::get<0>(tup)), std::get<1>(tup));
+  }
+  return transportTangentVectors(sourcesSurf);
+}
 
 VertexData<Vector2>
 VectorHeatMethodSolver::transportTangentVectors(const std::vector<std::tuple<SurfacePoint, Vector2>>& sources) {

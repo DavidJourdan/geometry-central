@@ -43,6 +43,16 @@ SET(SRCS
   surface/stripe_patterns.cpp
   #surface/detect_symmetry.cpp
   #surface/mesh_ray_tracer.cpp
+  
+  pointcloud/point_cloud.cpp
+  pointcloud/neighborhoods.cpp
+  pointcloud/point_position_geometry.cpp
+  pointcloud/point_position_normal_geometry.cpp
+  pointcloud/point_position_frame_geometry.cpp
+  pointcloud/point_cloud_io.cpp
+  pointcloud/sample_cloud.cpp
+  pointcloud/local_triangulation.cpp
+  pointcloud/point_cloud_heat_solver.cpp
 
   numerical/linear_algebra_utilities.cpp
   numerical/suitesparse_utilities.cpp
@@ -56,6 +66,7 @@ SET(SRCS
   utilities/quaternion.cpp
   utilities/disjoint_sets.cpp
   utilities/knn.cpp
+  utilities/elementary_geometry.cpp
 )
 
 SET(INCLUDE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../include/geometrycentral/")
@@ -96,6 +107,7 @@ SET(HEADERS
   ${INCLUDE_ROOT}/surface/signpost_intrinsic_triangulation.ipp
   ${INCLUDE_ROOT}/surface/simple_idt.h
   ${INCLUDE_ROOT}/surface/simple_polygon_mesh.h
+  ${INCLUDE_ROOT}/surface/stripe_patterns.h
   ${INCLUDE_ROOT}/surface/surface_centers.h
   ${INCLUDE_ROOT}/surface/surface_mesh.h
   ${INCLUDE_ROOT}/surface/surface_mesh.ipp

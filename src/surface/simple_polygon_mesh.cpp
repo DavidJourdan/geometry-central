@@ -7,7 +7,10 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <iomanip>
 #include <unordered_set>
+// For strncmp
+#include <string.h>
 
 
 namespace geometrycentral {
@@ -263,7 +266,8 @@ void SimplePolygonMesh::readMeshFromAsciiStlFile(std::istream& in) {
     ss >> token;
     return token == prefix;
   };
-
+  // Eat the header line
+  nextLine();  
   // Parse STL file
   while (nextLine() && !startsWithToken(line, "endsolid")) {
     assertToken("facet");
@@ -345,17 +349,24 @@ void SimplePolygonMesh::readMeshFromBinaryStlFile(std::istream& in) {
 void SimplePolygonMesh::readMeshFromStlFile(std::istream& in) {
   clear();
 
-  // parse stl format
-  std::string line;
-  getline(in, line);
-  std::stringstream ss(line);
-  std::string token;
-  ss >> token;
-  if (token == "solid") {
+  // Parse the STL format by looking for the keyword "solid"
+  // as the first 5 bytes of the file.  If found, this is 
+  // our indication we are reading an ASCII format STL file.
+  std::array<char, 16> buffer;
+  std::fill(begin(buffer), end(buffer),0);
+  in.read(buffer.data(), 5);
+  // Conver to lower case for string comparison
+  std::transform(begin(buffer), end(buffer), begin(buffer), 
+    [](char c)->char {return std::tolower(c);});
+  // In both cases, go ahead and rewind the file
+  // to the beginning.  We will handle the STL
+  // header in each of the specialized read functions.
+  in.seekg(-5, std::ios::cur);
+  if(strncmp("solid", buffer.data(), 5) == 0) {
     readMeshFromAsciiStlFile(in);
   } else {
     readMeshFromBinaryStlFile(in);
-  }
+  }  
 }
 
 void SimplePolygonMesh::readMeshFromOffFile(std::istream& in) {
@@ -582,6 +593,8 @@ void SimplePolygonMesh::writeMesh(std::ostream& out, std::string type) {
 
 void SimplePolygonMesh::writeMeshObj(std::ostream& out) {
 
+  // Make sure we write out at full precision
+  out << std::setprecision(std::numeric_limits<double>::max_digits10);
 
   // Write header
   out << "# Mesh exported from geometry-central" << std::endl;

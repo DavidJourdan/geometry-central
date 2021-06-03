@@ -43,7 +43,7 @@ The class stateful class `FlipEdgeNetwork` encapsulates all functionality in the
 
 The most direct construct takes as input a sequence of halfedges along the surface which comprise the path.
 
-??? func "`#!cpp FlipEdgeNetwork::FlipEdgeNetwork(ManifoldSurfaceMesh& mesh, IntrinsicGeometryInterface& inputGeom, std::vector<std::vector<Halfedge>> paths, VertexData<bool> extraMarkedVerts = VertexData<bool>())`"
+??? func "`#!cpp FlipEdgeNetwork::FlipEdgeNetwork(ManifoldSurfaceMesh& mesh, IntrinsicGeometryInterface& inputGeom, const std::vector<std::vector<Halfedge>>& paths, VertexData<bool> extraMarkedVerts = VertexData<bool>())`"
 
     Construct a network of paths along the surface.
 
@@ -81,6 +81,12 @@ Additionally, several factory methods are provided which assist in constructing 
     - `inPath`: a boolean array indicating edges which are in the path
     - `extraMarkedVerts`: if given, boolean vector of vertices where the path is pinned, and should not be straightened
 
+??? func "`#!cpp FlipEdgeNetwork::reinitializePath(const std::vector<std::vector<Halfedge>>& paths)`"
+
+    Re-initialize an existing `FlipEdgeNetwork` object to hold the paths in `paths`, just like in the constructor. Useful when used in conjunction with `rewind()`.
+
+    - `paths`: a collection of paths along the surface, each given as an ordered sequence of halfedges
+
 ## Manipulating paths
 
 The key routine is `FlipEdgeNetwork::iterativeShorten()`, which shortens the path until it is a geodesic by flipping edges in the underlying intrinsic triangulation.
@@ -97,6 +103,43 @@ The key routine is `FlipEdgeNetwork::iterativeShorten()`, which shortens the pat
 
 Importantly, after calling `iterativeShorten()`, the underlying intrinsic triangulation `FlipEdgeNetwork::tri` is a triangulation which _conforms_ to the generated geodesics. This triangulation can then be used for subsequent computation, such as solving a PDE which has geodesics as boundary conditions.
 
+
+???+ info "Shortening many paths"
+
+    After shortening a path to a geodesic, the underlying triangulation has been mutated by edge flips. If you want to shorten another path, you can call `rewind()` to reset the data structure and prepare it for the next path.
+
+    For instance, if you wanted to find many point-to-point geodesic paths, you might write something like:
+
+    ```cpp
+    std::unique_ptr<FlipEdgeNetwork> flipNetwork(new FlipEdgeNetwork(*mesh, *geometry, {}));
+    flipNetwork->supportRewinding = true;
+    flipNetwork->posGeom = geometry.get();
+
+    for(/* each path to compute */) {
+
+      Vertex startVert; // populate these somehow
+      Vertex endVert; 
+
+      // Get an initial dijkstra path
+      // (surface/mesh_graph_algorithms.h)
+      std::vector<Halfedge> dijkstraPath = shortestEdgePath(*geom, startVert, endVert);
+
+      // Reinitialize the ede network to contain this path
+      flipNetwork->reinitializePath({dijkstraPath});
+
+      // Straighten the path to geodesic
+      flipNetwork->iterativeShorten();
+
+      // Extract the path and store it in the vector
+      std::vector<Vector3> path3D = flipNetwork->getPathPolyline3D().front();
+
+      // Be kind, rewind
+      flipNetwork->rewind();
+    }
+
+    ```
+    
+
 ### Geodesic Bézier curves 
 
 Once we can shorten curves to geodesics, we can use a de Casteljau-style subdivision scheme to construct geodesic Bézier curves along a mesh,
@@ -108,7 +151,7 @@ using a procedure described in "Modeling on triangulations with geodesic curves"
 
     - `nRounds` specifies the number of subdivision rounds to perform; the curve converges to an exact geodesics as `nRounds` increases. Setting `nRounds=3` is often a good initial choice.
 
-    Note that the control points of the curve should be _marked vertices_, as described in the construction section.
+    Note that the control points of the curve should be _marked vertices_, as described in the construction section. Additionally, this function should be applied to a network consisting of a _single path_, not distinct paths between multiple control points.  Calling the factory method `FlipEdgeNetwork::constructFromPiecewiseDijkstraPath(mesh, geom, /* vector of constrol vertices */, false, true)` above will construct a path ready for Bézier subdivision.
  
     The algorithm used here is essentially the one described in "Modeling on triangulations with geodesic curves" by Morera et al. (2008), but using flip-based geodesics to straighten paths.
 
@@ -170,6 +213,12 @@ A simpler approach is to simply extract the path as a sequence of points in 3D s
     **To use this approach, you must first set your 3D mesh geometry as the `posGeom` member.** 
 
 Additionally, a collection of useful utility functions are provided (see `flip_geodesic.h` the complete listing).
+
+??? func "`#!cpp void FlipEdgeNetwork::rewind()`"
+    
+    Undo any flips which have been performed, resetting the data structure to its initial state.
+
+    Note that you must set `FlipEdgeNetwork::supportRewinding = true` right after constructure (before doing any shortening) to be able to use `rewind()`.
 
 ??? func "`#!cpp bool FlipEdgeNetwork::edgeInPath(Edge e)`"
 

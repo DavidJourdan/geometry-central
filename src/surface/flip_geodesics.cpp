@@ -220,13 +220,13 @@ std::vector<Halfedge> FlipEdgePath::getHalfedgeList() {
 }
 
 FlipEdgeNetwork::FlipEdgeNetwork(ManifoldSurfaceMesh& mesh_, IntrinsicGeometryInterface& inputGeom,
-                                 std::vector<std::vector<Halfedge>> hePaths, VertexData<bool> extraMarkedVerts)
+                                 const std::vector<std::vector<Halfedge>>& hePaths, VertexData<bool> extraMarkedVerts)
     : tri(std::unique_ptr<SignpostIntrinsicTriangulation>(new SignpostIntrinsicTriangulation(mesh_, inputGeom))),
       mesh(*(tri->intrinsicMesh)), pathsAtEdge(mesh), isMarkedVertex(mesh, false) {
 
 
   // Build initial paths from the vectors of edges (path constructor updates other structures of this class)
-  for (std::vector<Halfedge>& hePath : hePaths) {
+  for (const std::vector<Halfedge>& hePath : hePaths) {
     // Assumes that path is closed if it ends where it starts
     // (this might be a problem as the default one day, but for now it is overwhelmingly likely to be what we want
     Halfedge firstHe = hePath.front();
@@ -518,12 +518,12 @@ std::tuple<double, double> FlipEdgeNetwork::measureSideAngles(Halfedge hePrev, H
     }
   }
 
-  return {leftAngle, rightAngle};
+  return std::tuple<double, double>{leftAngle, rightAngle};
 }
 
 std::tuple<SegmentAngleType, double> FlipEdgeNetwork::locallyShortestTestWithType(Halfedge hePrev, Halfedge heNext) {
 
-  if (hePrev == Halfedge()) return {SegmentAngleType::Shortest, std::numeric_limits<double>::infinity()};
+  if (hePrev == Halfedge()) return std::make_tuple(SegmentAngleType::Shortest, std::numeric_limits<double>::infinity());
 
   double leftAngle, rightAngle;
   std::tie(leftAngle, rightAngle) = measureSideAngles(hePrev, heNext);
@@ -532,14 +532,14 @@ std::tuple<SegmentAngleType, double> FlipEdgeNetwork::locallyShortestTestWithTyp
   // Classify
   if (leftAngle < rightAngle) {
     if (leftAngle > (M_PI - EPS_ANGLE)) {
-      return {SegmentAngleType::Shortest, minAngle};
+      return std::make_tuple(SegmentAngleType::Shortest, minAngle);
     }
-    return {SegmentAngleType::LeftTurn, minAngle};
+    return std::make_tuple(SegmentAngleType::LeftTurn, minAngle);
   } else {
     if (rightAngle > (M_PI - EPS_ANGLE)) {
-      return {SegmentAngleType::Shortest, minAngle};
+      return std::make_tuple(SegmentAngleType::Shortest, minAngle);
     }
-    return {SegmentAngleType::RightTurn, minAngle};
+    return std::make_tuple(SegmentAngleType::RightTurn, minAngle);
   }
 }
 
@@ -790,13 +790,25 @@ void FlipEdgeNetwork::locallyShortenAt(FlipPathSegment& pathSegment, SegmentAngl
         continue;
       }
 
+      // Gather values for the edge to be flipped
+      Edge currEdge = sCurr.edge();
+      double oldLen = tri->intrinsicEdgeLengths[currEdge]; // old values are used for rewinding
+      double oldAngleA = tri->intrinsicHalfedgeDirections[currEdge.halfedge()];
+      double oldAngleB = tri->intrinsicHalfedgeDirections[currEdge.halfedge().twin()];
+      bool oldIsOrig = tri->edgeIsOriginal[currEdge];
+
       // Try to flip the edge. Note that flipping will only be possible iff \beta < \pi as in the formal algorithm
       // statement
-      Edge currEdge = sCurr.edge();
       bool flipped = tri->flipEdgeIfPossible(currEdge, 1e-6);
 
       if (flipped) {
         nFlips++;
+
+        // track data to support rewinding
+        if (supportRewinding) {
+          rewindRecord.emplace_back(currEdge, oldLen, oldAngleA, oldAngleB, oldIsOrig);
+        }
+
         // Flip happened! Update data and continue processing
         // Re-check previous edge
         sCurr = sCurr.twin().next().twin();
@@ -869,14 +881,14 @@ void FlipEdgeNetwork::processSingleEdgeLoop(FlipPathSegment& pathSegment, Segmen
 
     edgePath.pathHeInfo.erase(id);
     popOutsideSegment(he);
-    edgePath.pathHeInfo[firstID] = {heFirst, secondID, secondID};
-    edgePath.pathHeInfo[secondID] = {heSecond, firstID, firstID};
+    edgePath.pathHeInfo[firstID] = std::make_tuple(heFirst, secondID, secondID);
+    edgePath.pathHeInfo[secondID] = std::make_tuple(heSecond, firstID, firstID);
 
-    pushOutsideSegment(heFirst.twin(), {&edgePath, firstID});
-    pushOutsideSegment(heSecond.twin(), {&edgePath, secondID});
+    pushOutsideSegment(heFirst.twin(), FlipPathSegment{&edgePath, firstID});
+    pushOutsideSegment(heSecond.twin(), FlipPathSegment{&edgePath, secondID});
 
-    addToWedgeAngleQueue({&edgePath, firstID});
-    addToWedgeAngleQueue({&edgePath, secondID});
+    addToWedgeAngleQueue(FlipPathSegment{&edgePath, firstID});
+    addToWedgeAngleQueue(FlipPathSegment{&edgePath, secondID});
 
     break;
   }
@@ -890,14 +902,14 @@ void FlipEdgeNetwork::processSingleEdgeLoop(FlipPathSegment& pathSegment, Segmen
 
     edgePath.pathHeInfo.erase(id);
     popOutsideSegment(he.twin());
-    edgePath.pathHeInfo[firstID] = {heFirst, secondID, secondID};
-    edgePath.pathHeInfo[secondID] = {heSecond, firstID, firstID};
+    edgePath.pathHeInfo[firstID] = std::make_tuple(heFirst, secondID, secondID);
+    edgePath.pathHeInfo[secondID] = std::make_tuple(heSecond, firstID, firstID);
 
-    pushOutsideSegment(heFirst, {&edgePath, firstID});
-    pushOutsideSegment(heSecond, {&edgePath, secondID});
+    pushOutsideSegment(heFirst, FlipPathSegment{&edgePath, firstID});
+    pushOutsideSegment(heSecond, FlipPathSegment{&edgePath, secondID});
 
-    addToWedgeAngleQueue({&edgePath, firstID});
-    addToWedgeAngleQueue({&edgePath, secondID});
+    addToWedgeAngleQueue(FlipPathSegment{&edgePath, firstID});
+    addToWedgeAngleQueue(FlipPathSegment{&edgePath, secondID});
 
     break;
   }
@@ -1014,7 +1026,7 @@ void FlipEdgeNetwork::addAllWedgesToAngleQueue() {
       std::tie(currHe, prevID, nextID) = it.second;
 
       if (prevID != INVALID_IND) {
-        addToWedgeAngleQueue({epPtr.get(), currID});
+        addToWedgeAngleQueue(FlipPathSegment{epPtr.get(), currID});
       }
     }
   }
@@ -1253,6 +1265,71 @@ void FlipEdgeNetwork::bezierSubdivideRecursive(size_t nRoundsRemaining, const Ve
   // Recurse on to both halves of the curve
   bezierSubdivideRecursive(nRoundsRemaining - 1, firstControlCall, newMidpoint);
   bezierSubdivideRecursive(nRoundsRemaining - 1, newMidpoint, lastControlCall);
+}
+
+void FlipEdgeNetwork::rewind() {
+  if (!supportRewinding) {
+    throw std::runtime_error(
+        "Called FlipEdgeNetwork::rewind(), but rewinding is not supported. Set supportRewinding=true on construction.");
+  }
+
+  // TODO in theory, we might want to separate out the idea of undoing a sequence of flips, and of clearing the
+  // represented paths. Right now this function always does both.
+
+  // == Clear any stored paths
+  // Clear out edge stacks
+  for (auto& epPtr : paths) {
+    // TODO maybe do this in a desctructor of FlipEdgePath instead? Right now this is the only place removals happen.
+    FlipEdgePath& path = *epPtr;
+    for (auto it : path.pathHeInfo) {
+      SegmentID prevID, nextID;
+      Halfedge currHe;
+      std::tie(currHe, prevID, nextID) = it.second;
+      pathsAtEdge[currHe.edge()].clear();
+    }
+  }
+  // Clear out paths themselves, and any stored data
+  paths.clear();
+  wedgeAngleQueue = std::priority_queue<WeightedAngle, std::vector<WeightedAngle>,
+                                        std::greater<WeightedAngle>>(); // no clear method, so create a new one
+
+  // Undo the rewind stack
+  while (!rewindRecord.empty()) {
+
+    // Get the top element
+    Edge edge;
+    double oldLen, oldAngleA, oldAngleB;
+    bool isOrig;
+    std::tie(edge, oldLen, oldAngleA, oldAngleB, isOrig) = rewindRecord.back();
+    rewindRecord.pop_back();
+
+    // Undo the flip
+    // bool flipped = tri->flipEdgeIfPossible(edge, 0.);
+    tri->flipEdgeManual(edge, oldLen, oldAngleA, oldAngleB, isOrig, true);
+  }
+}
+
+void FlipEdgeNetwork::reinitializePath(const std::vector<std::vector<Halfedge>>& newPaths) {
+
+  // reset the data structure to its initial state
+  rewind();
+
+  // TODO shared code from constructor
+  for (const std::vector<Halfedge>& hePath : newPaths) {
+    // Assumes that path is closed if it ends where it starts
+    // (this might be a problem as the default one day, but for now it is overwhelmingly likely to be what we want
+    Halfedge firstHe = hePath.front();
+    Halfedge lastHe = hePath.back();
+    bool isClosed = firstHe.vertex() == lastHe.twin().vertex();
+
+    // Convert to the corresponding intrinsic halfedges
+    std::vector<Halfedge> intPath(hePath.size());
+    for (size_t i = 0; i < hePath.size(); i++) {
+      intPath[i] = mesh.halfedge(hePath[i].getIndex());
+    }
+
+    paths.emplace_back(new FlipEdgePath(*this, intPath, isClosed));
+  }
 }
 
 bool FlipEdgeNetwork::edgeInPath(Edge e) { return !pathsAtEdge[e].empty(); }
