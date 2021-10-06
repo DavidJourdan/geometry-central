@@ -335,12 +335,11 @@ std::vector<Isoline> extractIsolinesFromStripePattern(IntrinsicGeometryInterface
           for (auto& it : isoPts) iso.barycenters.push_back(it);
       }
     }
+    if (nbOfPieces > 0)
+      isolines.push_back(iso);
+
     if (nbOfPieces > 2) // isolines stop at singularities, so they should never branch out
       throw std::runtime_error("Isolines should only branch out on singularities");
-
-    if (nbOfPieces > 0) {
-      isolines.push_back(iso);
-    }
   }
   return isolines;
 }
