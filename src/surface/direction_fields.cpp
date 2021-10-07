@@ -103,7 +103,7 @@ VertexData<Vector2> computeSmoothestVertexDirectionField(IntrinsicGeometryInterf
   SparseMatrix<std::complex<double>> energyMatrix = computeVertexConnectionLaplacian(geometry, nSym);
 
   // Find the smallest eigenvector
-  Vector<std::complex<double>> solution = smallestEigenvectorSquare(energyMatrix, massMatrix);
+  Vector<std::complex<double>> solution = smallestEigenvectorPositiveDefinite(energyMatrix, massMatrix);
 
   // Copy the result to a VertexData vector
   VertexData<Vector2> toReturn(mesh);
@@ -129,7 +129,7 @@ FaceData<Vector2> computeSmoothestFaceDirectionField(IntrinsicGeometryInterface&
   SparseMatrix<std::complex<double>> energyMatrix = computeFaceConnectionLaplacian(geometry, nSym);
 
   // Find the smallest eigenvector
-  Vector<std::complex<double>> solution = smallestEigenvectorSquare(energyMatrix, massMatrix);
+  Vector<std::complex<double>> solution = smallestEigenvectorPositiveDefinite(energyMatrix, massMatrix);
 
   // Copy the result to a FaceData vector
   FaceData<Vector2> toReturn(mesh);
@@ -205,7 +205,7 @@ VertexData<Vector2> computeSmoothestBoundaryAlignedVertexDirectionField(Intrinsi
 
   Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix;
   Eigen::VectorXcd RHS = massMatrix * b;
-  Eigen::VectorXcd solution = solveSquare(LHS, RHS);
+  Eigen::VectorXcd solution = solvePositiveDefinite(LHS, RHS);
 
   // Copy the result to a VertexData vector for both the boundary and interior
   VertexData<Vector2> toReturn(mesh);
@@ -288,7 +288,7 @@ FaceData<Vector2> computeSmoothestBoundaryAlignedFaceDirectionField(IntrinsicGeo
 
   Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix;
   Eigen::VectorXcd RHS = massMatrix * b;
-  Eigen::VectorXcd solution = solveSquare(LHS, RHS);
+  Eigen::VectorXcd solution = solvePositiveDefinite(LHS, RHS);
 
   // Copy the result to a FaceData object
   FaceData<Vector2> field(mesh);
@@ -343,7 +343,7 @@ VertexData<Vector2> computeCurvatureAlignedVertexDirectionField(ExtrinsicGeometr
 
   Eigen::VectorXcd RHS = massMatrix * dirVec;
   Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix - lambdaT * massMatrix;
-  Eigen::VectorXcd solution = solveSquare(LHS, RHS);
+  Eigen::VectorXcd solution = solvePositiveDefinite(LHS, RHS);
 
   // Copy the result to a VertexData vector
   VertexData<Vector2> toReturn(mesh);
@@ -391,7 +391,7 @@ FaceData<Vector2> computeCurvatureAlignedFaceDirectionField(EmbeddedGeometryInte
 
   Eigen::VectorXcd RHS = massMatrix * dirVec;
   Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix - lambdaT * massMatrix;
-  Eigen::VectorXcd solution = solveSquare(LHS, RHS);
+  Eigen::VectorXcd solution = solvePositiveDefinite(LHS, RHS);
 
   // Copy the result to a FaceData object
   FaceData<Vector2> field(mesh);
@@ -437,7 +437,7 @@ VertexData<Vector2> computeDirectionAlignedVertexDirectionField(
   // lambda is something of a magical constant, see "Globally Optimal Direction Fields", eqn 16
   Eigen::VectorXcd RHS = massMatrix * dirVec;
   Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix - lambda * massMatrix;
-  Eigen::VectorXcd solution = solveSquare(LHS, RHS);
+  Eigen::VectorXcd solution = solvePositiveDefinite(LHS, RHS);
 
   // Copy the result to a VertexData vector
   VertexData<Vector2> toReturn(mesh);
@@ -482,7 +482,7 @@ FaceData<Vector2> computeDirectionAlignedFaceDirectionField(
   // lambda is something of a magical constant, see "Globally Optimal Direction Fields", eqn 16
   Eigen::VectorXcd RHS = massMatrix * dirVec;
   Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix - lambda * massMatrix;
-  Eigen::VectorXcd solution = solveSquare(LHS, RHS);
+  Eigen::VectorXcd solution = solvePositiveDefinite(LHS, RHS);
 
   // Copy the result to a FaceData object
   FaceData<Vector2> field(mesh);
@@ -661,14 +661,14 @@ VertexData<Vector2> computeSmoothestBoundaryAlignedVertexDirectionField(Intrinsi
 
     Eigen::VectorXcd RHS = massMatrix * (t * dirVec + b);
     Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix;
-    solution = solveSquare(LHS, RHS);
+    solution = solvePositiveDefinite(LHS, RHS);
   }
   // Otherwise find the general closest solution
   else {
     std::cout << "Solving smoothest field dirichlet problem..." << std::endl;
     Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix;
     Eigen::VectorXcd RHS = massMatrix * b;
-    solution = solveSquare(LHS, RHS);
+    solution = solvePositiveDefinite(LHS, RHS);
   }
 
   // Copy the result to a VertexData vector for both the boudary and interior
@@ -788,7 +788,7 @@ FaceData<Vector2> computeSmoothestFaceDirectionField_noBoundary(IntrinsicGeometr
     // Eigen::VectorXcd RHS = massMatrix * dirVec;
     Eigen::VectorXcd RHS = dirVec;
     Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix - lambdaT * massMatrix;
-    solution = solveSquare(LHS, RHS);
+    solution = solvePositiveDefinite(LHS, RHS);
 
   }
   // Otherwise find the smallest eigenvector
@@ -952,7 +952,7 @@ FaceData<Vector2> computeSmoothestFaceDirectionField_boundary(IntrinsicGeometryI
     std::cout << "Solving smoothest field dirichlet problem with curvature term..." << std::endl;
     Eigen::VectorXcd RHS = massMatrix * (t * dirVec + b);
     Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix;
-    solution = solveSquare(LHS, RHS);
+    solution = solvePositiveDefinite(LHS, RHS);
 
   }
   // Otherwise find the general closest solution
@@ -960,7 +960,7 @@ FaceData<Vector2> computeSmoothestFaceDirectionField_boundary(IntrinsicGeometryI
     std::cout << "Solving smoothest field dirichlet problem..." << std::endl;
     Eigen::SparseMatrix<std::complex<double>, Eigen::ColMajor> LHS = energyMatrix;
     Eigen::VectorXcd RHS = massMatrix * b;
-    solution = solveSquare(LHS, RHS);
+    solution = solvePositiveDefinite(LHS, RHS);
   }
 
 

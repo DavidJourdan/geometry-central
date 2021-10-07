@@ -152,7 +152,7 @@ VertexData<Vector2> computeParameterization(IntrinsicGeometryInterface& geometry
   SparseMatrix<double> massMatrix = computeRealVertexMassMatrix(geometry);
 
   // Find the smallest eigenvector
-  Vector<double> solution = smallestEigenvectorPositiveDefinite(energyMatrix, massMatrix);
+  Vector<double> solution = smallestEigenvectorPositiveDefinite(energyMatrix, massMatrix, 20);
 
   // Copy the result to a VertexData vector
   VertexData<Vector2> toReturn(mesh);
