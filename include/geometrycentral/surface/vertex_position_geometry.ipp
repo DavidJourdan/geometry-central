@@ -7,18 +7,26 @@ VertexPositionGeometry::VertexPositionGeometry(SurfaceMesh& mesh_, const Eigen::
     : VertexPositionGeometry(mesh_) {
 
   // sanity checks on input matrix dimensions
-  GC_SAFETY_ASSERT(vMat.cols() == 3, "input must be a V x 3 matrix -- cols() should == 3");
+  GC_SAFETY_ASSERT(vMat.cols() > 1, "input must be a V x 3 matrix -- cols() should == 3");
   GC_SAFETY_ASSERT(static_cast<size_t>(vMat.rows()) == mesh_.nVertices(),
                    "input must be a V x 3 matrix -- rows() should == nVertices()");
 
   size_t iV = 0;
-  for (Vertex v : mesh_.vertices()) {
-    double x = vMat(iV, 0);
-    double y = vMat(iV, 1);
-    double z = vMat(iV, 2);
-    vertexPositions[v] = Vector3{x, y, z};
-    iV++;
-  }
+  if (vMat.cols() == 3)
+    for (Vertex v : mesh_.vertices()) {
+      double x = vMat(iV, 0);
+      double y = vMat(iV, 1);
+      double z = vMat(iV, 2);
+      inputVertexPositions[v] = Vector3{x, y, z};
+      iV++;
+    }
+  else
+    for (Vertex v : mesh_.vertices()) {
+      double x = vMat(iV, 0);
+      double y = vMat(iV, 1);
+      inputVertexPositions[v] = Vector3{x, y, 0};
+      iV++;
+    }
 }
 
 inline double VertexPositionGeometry::edgeLength(Edge e) const {

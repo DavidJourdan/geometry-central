@@ -30,6 +30,11 @@ public:
   void requireVertexMeanCurvatures();
   void unrequireVertexMeanCurvatures();
 
+  // Face mean curvature
+  FaceData<double> faceMeanCurvatures;
+  void requireFaceMeanCurvatures();
+  void unrequireFaceMeanCurvatures();
+
   // Vertex min principal curvature
   VertexData<double> vertexMinPrincipalCurvatures;
   void requireVertexMinPrincipalCurvatures();
@@ -58,6 +63,10 @@ protected:
   // Vertex mean curvature
   DependentQuantityD<VertexData<double>> vertexMeanCurvaturesQ;
   virtual void computeVertexMeanCurvatures();
+
+  // Face mean curvature
+  DependentQuantityD<FaceData<double>> faceMeanCurvaturesQ;
+  virtual void computeFaceMeanCurvatures();
 
   // Vertex min principal curvature
   DependentQuantityD<VertexData<double>> vertexMinPrincipalCurvaturesQ;

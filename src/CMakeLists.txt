@@ -49,6 +49,7 @@ SET(SRCS
   surface/intrinsic_mollification.cpp
   surface/tufted_laplacian.cpp
   surface/flip_geodesics.cpp
+  surface/stripe_patterns.cpp
   surface/transfer_functions.cpp
   surface/quadric_error_simplification.cpp
   surface/subdivide.cpp
@@ -127,10 +128,12 @@ SET(HEADERS
   ${INCLUDE_ROOT}/surface/simple_idt.h
   ${INCLUDE_ROOT}/surface/simple_polygon_mesh.h
   ${INCLUDE_ROOT}/surface/subdivide.h
+  ${INCLUDE_ROOT}/surface/stripe_patterns.h
   ${INCLUDE_ROOT}/surface/surface_centers.h
   ${INCLUDE_ROOT}/surface/surface_mesh.h
   ${INCLUDE_ROOT}/surface/surface_mesh.ipp
   ${INCLUDE_ROOT}/surface/surface_point.h
+  ${INCLUDE_ROOT}/surface/stripe_patterns.h
   ${INCLUDE_ROOT}/surface/surface_point.ipp
   ${INCLUDE_ROOT}/surface/surgery.h
   ${INCLUDE_ROOT}/surface/trace_geodesic.h
