@@ -58,7 +58,9 @@ SparseMatrix<double> buildVertexEnergyMatrix(IntrinsicGeometryInterface& geometr
   geometry.requireHalfedgeCotanWeights();
 
   std::vector<Eigen::Triplet<double>> triplets;
-  for (Edge e : mesh.edges()) {
+  #pragma omp parallel for
+  for (int k = 0; k < mesh.nEdges(); ++k) {
+    Edge e = mesh.edge(k);
     // compute the discrete 1-form
     bool crossesSheet;
     double omegaIJ = computeOmega(geometry, directionField, frequencies, e, &crossesSheet);
@@ -119,14 +121,13 @@ SparseMatrix<double> computeRealVertexMassMatrix(IntrinsicGeometryInterface& geo
 
   SurfaceMesh& mesh = geometry.mesh;
 
-  geometry.requireVertexIndices();
   geometry.requireVertexDualAreas();
 
   std::vector<Eigen::Triplet<double>> triplets;
-  for (Vertex v : mesh.vertices()) {
-    double area = geometry.vertexDualAreas[v];
+  #pragma omp parallel for
+  for (int i = 0; i < mesh.nVertices(); ++i) {
+    double area = geometry.vertexDualAreas[i];
 
-    size_t i = geometry.vertexIndices[v];
     triplets.emplace_back(2 * i, 2 * i, area);
     triplets.emplace_back(2 * i + 1, 2 * i + 1, area);
   }
@@ -145,8 +146,6 @@ VertexData<Vector2> computeParameterization(IntrinsicGeometryInterface& geometry
 
   SurfaceMesh& mesh = geometry.mesh;
 
-  geometry.requireVertexIndices();
-
   // Compute vertex energy matrix A and mass matrix B
   SparseMatrix<double> energyMatrix = buildVertexEnergyMatrix(geometry, directionField, branchIndices, frequencies);
   SparseMatrix<double> massMatrix = computeRealVertexMassMatrix(geometry);
@@ -156,10 +155,11 @@ VertexData<Vector2> computeParameterization(IntrinsicGeometryInterface& geometry
 
   // Copy the result to a VertexData vector
   VertexData<Vector2> toReturn(mesh);
-  for (Vertex v : mesh.vertices()) {
-    toReturn[v].x = solution(2 * geometry.vertexIndices[v]);
-    toReturn[v].y = solution(2 * geometry.vertexIndices[v] + 1);
-    toReturn[v] = toReturn[v].normalize();
+  #pragma omp parallel for
+  for (int i = 0; i < mesh.nVertices(); ++i) {
+    toReturn[i].x = solution(2 * i);
+    toReturn[i].y = solution(2 * i + 1);
+    toReturn[i] = toReturn[i].normalize();
   }
   return toReturn;
 }
@@ -175,7 +175,9 @@ std::tuple<CornerData<double>, FaceData<int>> computeTextureCoordinates(Intrinsi
   CornerData<double> textureCoordinates(mesh);
   FaceData<int> paramIndices(mesh);
 
-  for (Face f : mesh.faces()) {
+  #pragma omp parallel for
+  for (int i = 0; i < mesh.nFaces(); ++i) {
+    Face f = mesh.face(i);
     // grab the halfedges
     Halfedge hij = f.halfedge();
     Halfedge hjk = hij.next();
