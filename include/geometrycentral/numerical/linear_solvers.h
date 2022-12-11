@@ -131,4 +131,21 @@ protected:
   std::unique_ptr<SquareSolverInternals<T>> internals;
 };
 
+template <typename T>
+class SupernodalSolver final : public LinearSolver<T> {
+
+public:
+  SupernodalSolver(SparseMatrix<T>& mat, bool useGPU=false);
+  ~SupernodalSolver();
+
+  bool factorize(SparseMatrix<T>& mat);
+
+  // Solve!
+  void solve(Vector<T>& x, const Vector<T>& rhs) override;
+  Vector<T> solve(const Vector<T>& rhs) override;
+
+protected:
+  std::unique_ptr<PSDSolverInternals<T>> internals;
+};
+
 } // namespace geometrycentral
