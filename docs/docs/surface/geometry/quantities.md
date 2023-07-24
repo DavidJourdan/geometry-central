@@ -498,6 +498,51 @@ All operators are indexed over mesh elements according to the natural iteration 
 
     - **require:** `void IntrinsicGeometryInterface::requireDECOperators()`
 
+While the vertex-based cotan Laplacian above is standard in geometry processing, one can also construct a discrete Laplacian using different basis functions. The following matrices are the result of using _Crouzeix-Raviart_ basis functions, which are Lagrange elements based at edge midpoints: Each function is piecewise linear, has a value at 1 at its associated edge midpoint, and is 0 at all other adjacent edge midpoints.
+
+In graphics and geometry processing, Crouzeix-Raviart elements have been used, for example, to [discretize bending energies](https://cims.nyu.edu/gcl/papers/wardetzky2007dqb.pdf) and [discretize vector Dirichlet energy](https://odedstein.com/projects/a-simple-discretization/a-simple-discretization.pdf). Because there are typically more edges than vertices in a mesh, and there are only two faces in the support of each Crouzeix-Raviart basis function, Crouzeix-Raviart operators also typically have more DOFs than vertex-based operators.
+
+??? func "Crouzeix-Raviart Laplacian"
+    
+    ##### Crouzeix-Raviart Laplacian
+
+    The discrete Laplace operator, discretized via the piecewise linear *Crouzeix-Raviart* basis functions associated with edge midpoints.
+
+    A $|E| \times |E|$ real matrix. Always symmetric and positive semi-definite. This is the _weak_ Laplace operator, if we use it to evaluate $\mathsf{y} \leftarrow \mathsf{L} \mathsf{x}$, $\mathsf{x}$ should hold _pointwise_ quantities at edge midpoints, and the result $\mathsf{y}$ will contain _integrated_ values of the result in the neighborhood of each edge midpoint. If used to solve a Poisson problem, a mass matrix is likely necessary on the right hand side.
+
+    Only valid on triangular meshes.
+
+    - **member:** `Eigen::SparseMatrix<double> IntrinsicGeometryInterface::crouzeixRaviartLaplacian`
+    - **require:** `void IntrinsicGeometryInterface::requireCrouzeixRaviartLaplacian()`
+
+??? func "Crouzeix-Raviart mass matrix"
+
+    ##### Crouzeix-Raviart mass matrix
+
+    A mass matrix at edges, where the edge area is $1/3$ the incident face areas.
+
+    A $|E| \times |E|$ real diagonal matrix. Corresponds to the Galerkin mass matrix for Crouzeix-Raviart elements, which is already diagonal without lumping.
+
+    Only valid on triangular meshes.
+
+    - **member:** `Eigen::SparseMatrix<double> IntrinsicGeometryInterface::crouzeixRaviartMassMatrix`
+    - **require:** `void IntrinsicGeometryInterface::requireCrouzeixRaviartMassMatrix()`
+
+??? func "Crouzeix-Raviart connection Laplacian"
+
+    ##### Crouzeix-Raviart connection Laplacian
+
+    A discrete connection Laplacian operator, which applies to vector fields defined in edge tangent spaces
+
+    A $|E| \times |E|$ complex matrix. Always Hermitian and positive semi-definite.
+
+    Given a complex vector $\mathsf{x}$ of tangent vectors at edge midpoints, apply the operator by multiplying $\mathsf{L} * \mathsf{x}$. Like other mesh elements, the $x$-axis of the tangent space at edge `e` points in the direction of `e.halfedge()`.
+
+    Only valid on triangular meshes.
+
+    - **member:** `Eigen::SparseMatrix<double> IntrinsicGeometryInterface::crouzeixRaviartConnectionLaplacian`
+    - **require:** `void IntrinsicGeometryInterface::requireCrouzeixRaviartConnectionLaplacian()`
+
 
 ## Extrinsic angles
 
