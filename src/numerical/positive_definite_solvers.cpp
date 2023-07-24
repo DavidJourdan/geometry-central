@@ -84,6 +84,36 @@ PositiveDefiniteSolver<T>::PositiveDefiniteSolver(SparseMatrix<T>& mat)
 };
 
 template <typename T>
+bool PositiveDefiniteSolver<T>::factorize(SparseMatrix<T>& mat) {
+  
+#ifndef GC_NLINALG_DEBUG
+  checkFinite(mat);
+  checkHermitian(mat);
+#endif
+
+  // Suitesparse version
+#ifdef GC_HAVE_SUITESPARSE
+  mat.makeCompressed();
+
+  // Convert suitesparse format
+  if (internals->cMat != nullptr) {
+    cholmod_l_free_sparse(&internals->cMat, internals->context);
+  }
+  internals->cMat = toCholmod(mat, internals->context, SType::SYMMETRIC);
+
+  bool success = cholmod_l_factorize(internals->cMat, internals->factorization, internals->context);
+  // cholmod_l_gpu_stats(internals->context);
+
+  // Eigen version
+#else
+  internals->solver.factorize(mat);
+  bool success = internals->solver.info() == Eigen::Success;
+#endif
+
+  return success;
+}
+
+template <typename T>
 Vector<T> PositiveDefiniteSolver<T>::solve(const Vector<T>& rhs) {
   Vector<T> out;
   solve(out, rhs);
@@ -177,7 +207,7 @@ SupernodalSolver<T>::SupernodalSolver(SparseMatrix<T>& mat, bool useGPU)
   internals->cMat = toCholmod(mat, internals->context, SType::SYMMETRIC);
 
   // Factor
-  internals->context.setSupernodal();
+  internals->context.setSimplicial();
   internals->context.setLL();
 
   if(useGPU)

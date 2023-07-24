@@ -105,6 +105,8 @@ public:
   PositiveDefiniteSolver(SparseMatrix<T>& mat);
   ~PositiveDefiniteSolver();
 
+  bool factorize(SparseMatrix<T>& mat);
+
   // Solve!
   void solve(Vector<T>& x, const Vector<T>& rhs) override;
   Vector<T> solve(const Vector<T>& rhs) override;
