@@ -250,18 +250,13 @@ void EmbeddedGeometryInterface::computeFaceAreas() {
 
   for (Face f : mesh.faces()) {
 
-    // WARNING: Logic duplicated between cached and immediate version
-    Halfedge he = f.halfedge();
-    Vector3 pA = vertexPositions[he.vertex()];
-    he = he.next();
-    Vector3 pB = vertexPositions[he.vertex()];
-    he = he.next();
-    Vector3 pC = vertexPositions[he.vertex()];
+    Vector3 areaVec = Vector3::zero();
 
-    GC_SAFETY_ASSERT(he.next() == f.halfedge(), "faces must be triangular");
+    for(Halfedge he : f.adjacentHalfedges()) {
+      areaVec += 0.5 * cross(vertexPositions[he.vertex()], vertexPositions[he.next().vertex()]);
+    }
 
-    double area = 0.5 * norm(cross(pB - pA, pC - pA));
-    faceAreas[f] = area;
+    faceAreas[f] = norm(areaVec);
   }
 }
 
@@ -278,10 +273,11 @@ void EmbeddedGeometryInterface::computeCornerAngles() {
     Vector3 pA = vertexPositions[he.vertex()];
     he = he.next();
     Vector3 pB = vertexPositions[he.vertex()];
-    he = he.next();
-    Vector3 pC = vertexPositions[he.vertex()];
 
-    GC_SAFETY_ASSERT(he.next() == c.halfedge(), "faces must be triangular");
+    while(he.next().vertex() != c.vertex()) {
+      he = he.next();
+    }
+    Vector3 pC = vertexPositions[he.vertex()];
 
     double q = dot(unit(pB - pA), unit(pC - pA));
     q = clamp(q, -1.0, 1.0);
