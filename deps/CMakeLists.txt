@@ -158,7 +158,7 @@ if (NOT TARGET nanoflann)
     # For backward compatibility, copy header file in the build directory.
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/nanoflann)
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/nanoflann/include/nanoflann.hpp
-        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include/nanoflann/nanoflann.hpp)
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include/nanoflann/)
     target_include_directories(nanoflann INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>)
 endif()
 
